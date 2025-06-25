@@ -33,6 +33,11 @@ public class SearchWindow {
         searchField.requestFocusInWindow();
     }
 
+    public static void hideWindow() {
+        frame.setVisible(false);
+        isWindowVisible = false;
+    }
+
     private static void createWindow() {
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
@@ -107,7 +112,9 @@ public class SearchWindow {
         frame.add(panel);
 
         frame.getRootPane().registerKeyboardAction(
-            e -> frame.setVisible(false),
+            e -> {
+                hideWindow();
+            },
             KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
             JComponent.WHEN_IN_FOCUSED_WINDOW
         );
@@ -115,26 +122,30 @@ public class SearchWindow {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                isWindowVisible = false;
+                hideWindow();
             }
 
             @Override
             public void windowClosed(WindowEvent e) {
-                isWindowVisible = false;
+                hideWindow();
             }
         });
     }
 
     public static boolean isWindowVisible() {
-        return isWindowVisible;
+        return isWindowVisible && frame != null && frame.isShowing();
     }
 
     public static void bringToFront() {
         if (frame != null) {
-            frame.setExtendedState(JFrame.NORMAL);
-            frame.toFront();
-            frame.requestFocus();
-            refreshResults();
+            if (!isWindowVisible) {
+                showWindow();
+            } else {
+                frame.setExtendedState(JFrame.NORMAL);
+                frame.toFront();
+                frame.requestFocus();
+                refreshResults();
+            }
         }
     }
 
