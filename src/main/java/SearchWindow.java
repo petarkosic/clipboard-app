@@ -13,7 +13,6 @@ public class SearchWindow {
     private static boolean isWindowCreated = false;
     private static boolean isWindowVisible = false;
 
-
     public static void showWindow() {
         if (!isWindowCreated) {
             createWindow();
@@ -22,8 +21,10 @@ public class SearchWindow {
         }
         
         frame.setVisible(true);
-        frame.setExtendedState(JFrame.NORMAL);;
+        frame.getGlassPane().setVisible(true);
+        frame.setExtendedState(JFrame.NORMAL);
         frame.toFront();
+        frame.setAlwaysOnTop(true);
         isWindowVisible = true;
         refreshResults();
         frame.requestFocus();
@@ -34,8 +35,12 @@ public class SearchWindow {
     }
 
     public static void hideWindow() {
-        frame.setVisible(false);
-        isWindowVisible = false;
+        if (frame != null) {
+            frame.setAlwaysOnTop(false);
+            frame.setVisible(false);
+            frame.getGlassPane().setVisible(false);
+            isWindowVisible = false;
+        }
     }
 
     private static void createWindow() {
@@ -67,6 +72,21 @@ public class SearchWindow {
         frame.setSize(400, 500);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().setBackground(new Color(30, 30, 30));
+ 
+        frame.addWindowFocusListener(new WindowAdapter() {
+            @Override
+            public void windowLostFocus(WindowEvent e) {
+                // Use a timer to allow for click processing
+                Timer timer = new Timer(100, event -> {
+                    if (!frame.isFocusOwner() && !searchField.isFocusOwner() && 
+                        !resultList.isFocusOwner()) {
+                        hideWindow();
+                    }
+                });
+                timer.setRepeats(false);
+                timer.start();
+            }
+        });
 
         searchField = new JTextField();
         searchField.setBackground(new Color(43, 43, 43));
