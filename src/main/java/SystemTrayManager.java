@@ -23,7 +23,7 @@ public class SystemTrayManager {
 
         PopupMenu popup = new PopupMenu();
         MenuItem openItem = new MenuItem("Open");
-        openItem.addActionListener(e -> SearchWindow.showWindow());
+        openItem.addActionListener(e -> MainWindow.showWindow());
         MenuItem exitItem = new MenuItem("Exit");
 
         exitItem.addActionListener(e -> {
@@ -61,7 +61,7 @@ public class SystemTrayManager {
                         if (pressedKeys.contains(HOTKEY_MOD1) && 
                             pressedKeys.contains(HOTKEY_MOD2) && 
                             pressedKeys.contains(HOTKEY_KEY)) {
-                            SearchWindow.showWindow();
+                            MainWindow.showWindow();
                             pressedKeys.clear();
                             
                             return true;

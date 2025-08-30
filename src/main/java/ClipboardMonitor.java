@@ -5,49 +5,15 @@ import javax.swing.SwingUtilities;
 
 public class ClipboardMonitor implements FlavorListener {
     private Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-    private HistoryManager historyManager = HistoryManager.getInstance();
     private AtomicBoolean isProcessing = new AtomicBoolean(false);
 
     public ClipboardMonitor() {
         this.clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        this.historyManager = HistoryManager.getInstance();
-    }
-
-    private void startPolling() {
-        Thread pollThread = new Thread(() -> {
-            String lastContent = null;
-
-            while (true) {
-                try {
-                    Thread.sleep(200);
-
-                    if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
-                        String currentContent = (String) clipboard.getData(DataFlavor.stringFlavor);
-                    
-                        if (currentContent != null && !currentContent.equals(lastContent)) {
-                            lastContent = currentContent;
-                            historyManager.addEntry(currentContent);
-                    
-                            SwingUtilities.invokeLater(() -> {
-                                if (SearchWindow.isWindowVisible()) {
-                                    SearchWindow.refreshResults();
-                                }
-                            });
-                        }
-                    }
-                } catch (Exception e) {
-                    System.err.println("Polling error: " + e.getMessage());
-                }
-            }
-        });
-        
-        pollThread.setDaemon(true);
-        pollThread.start();
     }
 
     public void start() {
         clipboard.addFlavorListener(this);
-        startPolling();
+        System.out.println("Clipboard monitor started");
     }
 
     @Override
@@ -58,16 +24,19 @@ public class ClipboardMonitor implements FlavorListener {
         }
 
         try {
-            int retries = 5; // Increased retry attempts
+            int retries = 5;
             while (retries-- > 0) {
                 try {
                     if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
                         String text = (String) clipboard.getData(DataFlavor.stringFlavor);
-                        historyManager.addEntry(text);
+                        System.out.println("Clipboard content captured: " + text);
+                        
+                        // Add to the main window storage
+                        MainWindow.addClip(text);
                         
                         SwingUtilities.invokeLater(() -> {
-                            if (SearchWindow.isWindowVisible()) {
-                                SearchWindow.refreshResults();
+                            if (MainWindow.isWindowVisible()) {
+                                // Refresh will happen automatically through addClip
                             }
                         });
                     } else {
@@ -76,20 +45,16 @@ public class ClipboardMonitor implements FlavorListener {
                     break;
                 } catch (IllegalStateException ex) {
                     System.out.println("Clipboard locked, retries left: " + retries);
-
                     if (retries == 0) {
                         System.err.println("Failed to access clipboard after all retries");
-                        ex.printStackTrace();
                     }
-                    
                     try {
-                        Thread.sleep(100); // Increased sleep time
+                        Thread.sleep(100);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
                 } catch (Exception ex) {
                     System.err.println("Unexpected error accessing clipboard: " + ex.getMessage());
-                    ex.printStackTrace();
                     break;
                 }
             }

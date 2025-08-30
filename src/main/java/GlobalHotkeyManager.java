@@ -1,3 +1,5 @@
+import java.awt.EventQueue;
+
 import javax.swing.SwingUtilities;
 
 import com.github.kwhat.jnativehook.GlobalScreen;
@@ -33,11 +35,14 @@ public class GlobalHotkeyManager implements NativeKeyListener {
         
         if (ctrlPressed && shiftPressed && e.getKeyCode() == HOTKEY_ALT) {
             SwingUtilities.invokeLater(() -> {
-                if (!SearchWindow.isWindowVisible()) {
-                    SearchWindow.showWindow();
-                } else {
-                    SearchWindow.bringToFront();
-                }
+                // Use invokeLater to ensure proper focus handling
+                EventQueue.invokeLater(() -> {
+                    if (!MainWindow.isWindowVisible()) {
+                        MainWindow.showWindow();
+                    } else {
+                        MainWindow.bringToFront();
+                    }
+                });
             });
         }
     }
